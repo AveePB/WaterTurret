@@ -1,11 +1,11 @@
 package dev.security.diary.service;
 
 import io.jsonwebtoken.Claims;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +18,7 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    //256 bit HEX KEY <- (Don't know if it's a valid key).
-    private static final String SECRET_KEY = "9d7893e0c16be2eb8dc401fb7099306c079fe9b44067eba0126d1d6034d654d2";
+    private static final String SECRET_KEY_256_BIT = "s2UJv4ZcEHCcvnW436I8guoM9ldINaVC0CZprkCyZD78oIDVTh4RXZTaNsSjx8M57oMiL0XTSnFYUxOskY0Tg0KUfOTZPNM3E23kyRT2Oybe31MeVHAmDLBrAXqXb0TSFwSPRnoe0uTyRoVU0bXToJopfX4IyCaOyg5wKyvIfovUguUmcwfd4ChEzSNVuF28cH0C2kvcohLVLkfiEY08c56jH07ZozLMhVx9d0ozIlVVzcCPlWYkTYXNtGAk5bK8";
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -55,7 +54,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY_256_BIT);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

@@ -1,4 +1,4 @@
-package dev.security.diary;
+package dev.aveepb.diary;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

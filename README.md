@@ -7,6 +7,10 @@
     - [JWT Claims](#jwt_claims)
     - [JWT Signature](#jwt_signature)
 3. [JWT Service](#jwt_service)
+    - [Token Generation](#token_generation)
+    - [Token Validation and Verification](#token_control)
+    - [Token Revocation and Management](#token_management)
+    - [Token Integration](#token_integration)
     
 
 ## Introduction <a name="introduction"></a>
@@ -77,63 +81,77 @@ match, it confirms the token's integrity and authenticity.
 A JWT service is a software component or system that specializes in handling the generation, validation, and management 
 of JWT tokens. Here's a breakdown of its primary functionalities:
 
-1. **Token Generation:**
-- The JWT service generates JWT tokens by encoding user-defined claims or information into a JSON-based payload.
-- It creates a unique signature by applying a secure hashing algorithm (such as HMAC or RSA) using a secret key.
-- The service constructs the token by combining the header, payload, and signature, producing a string of characters.
-   ```
-   public String generateToken(HashMap<String, Object> extraClaims, UserDetails userDetails) {
-   
-       return Jwts.builder()
-               .setClaims(extraClaims)
-               .setSubject(userDetails.getUsername())
-               .setIssuedAt(new Date(System.currentTimeMillis()))
-               .setExpiration(new Date(System.currentTimeMillis() + 1000*60))
-               .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-               .compact();
-   }
-   ```
+### **Token Generation:** <a name="token_generation"></a>
+1. The JWT service generates JWT tokens by encoding user-defined claims or information into a JSON-based payload.
+2. It creates a unique signature by applying a secure hashing algorithm (such as HMAC or RSA) using a secret key.
+3. The service constructs the token by combining the header, payload, and signature, producing a string of characters.
   
-2. **Token Validation and Verification:**
-- Upon receiving a JWT from a client, the service verifies its authenticity and integrity.
-   ```
-   public boolean isTokenValid(String token, UserDetails userDetails) {
-       String username = extractUsername(token);
-   
-       return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-   }
-   ```
+```
+public static String generateToken(HashMap<String, Object> extraClaims, Key key, UserDetails user) {
+    extraClaims.put("pass", user.getPassword());
+
+    return Jwts.builder()
+            .setClaims(extraClaims)
+            .setSubject(user.getUsername())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + 1000*60))
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+}   
+```
   
-- It decodes the received token to extract the payload and header information.
-   ```
-   private Claims extractAllClaims(String token) {
+### **Token Validation and Verification:** <a name="token_control"></a>
+1. Upon receiving a JWT from a client, the service verifies its authenticity and integrity.
+  
+```
+public static boolean isTokenValid(String token, Key key, UserDetails user) {
+    String username = JsonWebTokenClaims.extractUsername(token, key);
+
+    return (username.equals(user.getUsername()) && !isTokenExpired(token, key));
+}   
+```
+  
+2. It decodes the received token to extract the payload and header information.
+  
+```
+public static String extractUsername(String token, Key key) {
+    Claims claims = extractAllClaims(token, key);
+
+    return claims.getSubject();
+}
+```   
+
+```
+private Claims extractAllClaims(String token) {
    
-       return Jwts.parserBuilder()
-               .setSigningKey(getSigningKey())
-               .build()
-               .parseClaimsJws(token)
-               .getBody();
-   }
+    return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+}
    ```
 
-- The service checks the expiration (if an expiration time is included in the payload) and other claims to ensure 
+3. The service checks the expiration (if an expiration time is included in the payload) and other claims to ensure 
 the token's validity.
-   ```
-   private Date extractExpirationDate(String token) {
-   
-       return extractClaim(token, Claims::getExpiration);
-   }
-   ```
+  
+```
+public static boolean isTokenExpired(String token, Key key) {
 
-3. **Token Revocation and Management (optional):**
-- In some cases, JWT services might provide mechanisms to revoke or invalidate tokens before their natural expiration. 
+    return JsonWebTokenClaims.extractExpirationDate(token, key).before(new Date());
+}
+```
+
+### **Token Revocation and Management (optional):** <a name="token_management"></a>
+1. In some cases, JWT services might provide mechanisms to revoke or invalidate tokens before their natural expiration. 
 This might involve maintaining a blacklist or using token revocation lists (CRLs) or token introspection services.
 
-4. **Integration with Authentication and Authorization:**
-- JWT services are often integrated into authentication and authorization systems, allowing users to securely access 
+### **Integration with Authentication and Authorization:** <a name="token_integration"></a>
+1. JWT services are often integrated into authentication and authorization systems, allowing users to securely access 
 resources by presenting their valid tokens.
-- They provide a way to enforce access controls by validating the claims embedded within the tokens.
+2. They provide a way to enforce access controls by validating the claims embedded within the tokens.
 
 Overall, a JWT service is crucial for implementing secure authentication and authorization mechanisms in web applications 
 and APIs. By generating, validating, and managing JWT tokens, this service ensures the integrity and authenticity of 
 transmitted information, thereby enhancing the overall security of the system.
+

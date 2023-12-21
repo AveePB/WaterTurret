@@ -1,6 +1,8 @@
 package dev.aveepb.diary.security.filter;
 
+import dev.aveepb.diary.security.db.model.User;
 import dev.aveepb.diary.security.service.JwtService;
+import dev.aveepb.diary.security.service.UserService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -42,13 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             //Check user authentication status.
             if ((username.isPresent() && password.isPresent()) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails user = this.userService.loadUserByUsernameAndPassword(username.get(), password.get());
+                Optional<User> user = this.userService.fetchUserByUsernameAndPassword(username.get(), password.get());
 
                 //Check user token.
-                if (this.jwtService.isTokenValid(token, user)) {
+                if (user.isPresent() && this.jwtService.isTokenValid(token, user.get())) {
 
                     //Create authentication for current request.
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.get().getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     //Update security context.

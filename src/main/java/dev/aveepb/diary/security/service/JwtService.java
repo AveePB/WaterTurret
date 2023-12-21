@@ -1,7 +1,7 @@
 package dev.aveepb.diary.security.service;
 
-import dev.aveepb.diary.security.utils.JsonWebToken;
-import dev.aveepb.diary.security.utils.JsonWebTokenClaims;
+import dev.aveepb.diary.security.util.JsonWebToken;
+import dev.aveepb.diary.security.util.JsonWebTokenClaims;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -29,7 +29,7 @@ public class JwtService {
 
     /**
      * @param token the json web token.
-     * @return the username name.
+     * @return the username.
      */
     public Optional<String> fetchUsername(String token) {
 

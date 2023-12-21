@@ -1,4 +1,4 @@
-package dev.aveepb.diary.security.utils;
+package dev.aveepb.diary.security.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

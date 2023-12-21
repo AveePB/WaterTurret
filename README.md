@@ -11,6 +11,9 @@
     - [Token Validation and Verification](#token_control)
     - [Token Revocation and Management](#token_management)
     - [Token Integration](#token_integration)
+4. [JWT Authentication Filter](#jwt_filter)
+    - [Authorization Header](#auth_header)
+    - [Security Context](#security_context)
     
 
 ## Introduction <a name="introduction"></a>
@@ -155,3 +158,66 @@ Overall, a JWT service is crucial for implementing secure authentication and aut
 and APIs. By generating, validating, and managing JWT tokens, this service ensures the integrity and authenticity of 
 transmitted information, thereby enhancing the overall security of the system.
 
+## JWT Authentication Filter <a name="jwt_filter"></a>
+The JSON Web Token Authentication Filter is a part of a validation and verification process. This process is run by a 
+filter chain, which is a sequence of connected filters. These filters check the client's request and decide what to do 
+with it.
+
+### Authorization Header <a name="auth_header"></a>
+The token is stored in the request's header called **Authorization**. The header's structure is a string "***Bearer*** **TOKEN**".
+The token is an encoded string using a hashing algorithm. 
+
+```
+private static final String PREFIX = "Bearer ";
+...
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String authHeader = request.getHeader("Authorization");
+
+    //Validate request form.
+    if (authHeader != null && authHeader.startsWith(PREFIX)) {
+
+        //Extract important data from raw request.
+        String token = authHeader.substring(PREFIX.length());
+        Optional<String> username = this.jwtService.fetchUsername(token);
+        Optional<String> password = this.jwtService.fetchUserPassword(token);
+
+        ...             
+    }
+    
+    //Run next filter.
+    filterChain.doFilter(request, response);
+}
+```
+
+### Security Context <a name="security_context"></a>
+The security context stores data about the authentication status of a current request. It updates authentications
+all the time.
+
+```
+...
+private final JwtService jwtService;
+private final UserService userService;
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    ...
+    //Check user authentication status.
+    if ((username.isPresent() && password.isPresent()) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        Optional<User> user = this.userService.fetchUserByUsernameAndPassword(username.get(), password.get());
+
+        //Check user token.
+        if (user.isPresent() && this.jwtService.isTokenValid(token, user.get())) {
+
+            //Create authentication for current request.
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.get().getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            //Update security context.
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+    }
+    ...
+}
+```

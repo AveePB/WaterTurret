@@ -18,14 +18,14 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) throws Exception {
 
-        String token = "MY TOKEN";
+        String token = this.authService.register(request);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) throws Exception {
 
-        String token = "My TOKEN";
+        String token = this.authService.login(request);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }

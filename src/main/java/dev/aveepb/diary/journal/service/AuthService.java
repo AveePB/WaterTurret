@@ -1,2 +1,4 @@
-package dev.aveepb.diary.journal.service;public class AuthService {
+package dev.aveepb.diary.journal.service;
+
+public class AuthService {
 }

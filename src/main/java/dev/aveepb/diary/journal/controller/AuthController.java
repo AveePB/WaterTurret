@@ -1,2 +1,4 @@
-package dev.aveepb.diary.journal.controller;public class AuthController {
+package dev.aveepb.diary.journal.controller;
+
+public class AuthController {
 }

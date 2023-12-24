@@ -6,6 +6,14 @@
     - [Json Web Token (JWT)](#jwt_information)
     - [JWT Claims](#jwt_claims)
     - [JWT Signature](#jwt_signature)
+3. [JWT Service](#jwt_service)
+    - [Token Generation](#token_generation)
+    - [Token Validation and Verification](#token_control)
+    - [Token Revocation and Management](#token_management)
+    - [Token Integration](#token_integration)
+4. [JWT Authentication Filter](#jwt_filter)
+    - [Authorization Header](#auth_header)
+    - [Security Context](#security_context)
     
 
 ## Introduction <a name="introduction"></a>
@@ -71,3 +79,145 @@ token's signature.
 Upon receiving the token, the recipient can verify its authenticity by extracting the header and payload, re-signing the 
 concatenated message with the appropriate key, and comparing the generated signature with the received signature. If they 
 match, it confirms the token's integrity and authenticity.
+
+## JWT Service <a name="jwt_service"></a>
+A JWT service is a software component or system that specializes in handling the generation, validation, and management 
+of JWT tokens. Here's a breakdown of its primary functionalities:
+
+### **Token Generation:** <a name="token_generation"></a>
+1. The JWT service generates JWT tokens by encoding user-defined claims or information into a JSON-based payload.
+2. It creates a unique signature by applying a secure hashing algorithm (such as HMAC or RSA) using a secret key.
+3. The service constructs the token by combining the header, payload, and signature, producing a string of characters.
+  
+```
+public static String generateToken(HashMap<String, Object> extraClaims, Key key, UserDetails user) {
+    extraClaims.put("pass", user.getPassword());
+
+    return Jwts.builder()
+            .setClaims(extraClaims)
+            .setSubject(user.getUsername())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + 1000*60))
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+}   
+```
+  
+### **Token Validation and Verification:** <a name="token_control"></a>
+1. Upon receiving a JWT from a client, the service verifies its authenticity and integrity.
+  
+```
+public static boolean isTokenValid(String token, Key key, UserDetails user) {
+    String username = JsonWebTokenClaims.extractUsername(token, key);
+
+    return (username.equals(user.getUsername()) && !isTokenExpired(token, key));
+}   
+```
+  
+2. It decodes the received token to extract the payload and header information.
+  
+```
+public static String extractUsername(String token, Key key) {
+    Claims claims = extractAllClaims(token, key);
+
+    return claims.getSubject();
+}
+```   
+
+```
+private Claims extractAllClaims(String token) {
+   
+    return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+}
+   ```
+
+3. The service checks the expiration (if an expiration time is included in the payload) and other claims to ensure 
+the token's validity.
+  
+```
+public static boolean isTokenExpired(String token, Key key) {
+
+    return JsonWebTokenClaims.extractExpirationDate(token, key).before(new Date());
+}
+```
+
+### **Token Revocation and Management (optional):** <a name="token_management"></a>
+1. In some cases, JWT services might provide mechanisms to revoke or invalidate tokens before their natural expiration. 
+This might involve maintaining a blacklist or using token revocation lists (CRLs) or token introspection services.
+
+### **Integration with Authentication and Authorization:** <a name="token_integration"></a>
+1. JWT services are often integrated into authentication and authorization systems, allowing users to securely access 
+resources by presenting their valid tokens.
+2. They provide a way to enforce access controls by validating the claims embedded within the tokens.
+
+Overall, a JWT service is crucial for implementing secure authentication and authorization mechanisms in web applications 
+and APIs. By generating, validating, and managing JWT tokens, this service ensures the integrity and authenticity of 
+transmitted information, thereby enhancing the overall security of the system.
+
+## JWT Authentication Filter <a name="jwt_filter"></a>
+The JSON Web Token Authentication Filter is a part of a validation and verification process. This process is run by a 
+filter chain, which is a sequence of connected filters. These filters check the client's request and decide what to do 
+with it.
+
+### Authorization Header <a name="auth_header"></a>
+The token is stored in the request's header called **Authorization**. The header's structure is a string "***Bearer*** **TOKEN**".
+The token is an encoded string using a hashing algorithm. 
+
+```
+private static final String PREFIX = "Bearer ";
+...
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String authHeader = request.getHeader("Authorization");
+
+    //Validate request form.
+    if (authHeader != null && authHeader.startsWith(PREFIX)) {
+
+        //Extract important data from raw request.
+        String token = authHeader.substring(PREFIX.length());
+        Optional<String> username = this.jwtService.fetchUsername(token);
+        Optional<String> password = this.jwtService.fetchUserPassword(token);
+
+        ...             
+    }
+    
+    //Run next filter.
+    filterChain.doFilter(request, response);
+}
+```
+
+### Security Context <a name="security_context"></a>
+The security context stores data about the authentication status of a current request. It updates authentications
+all the time.
+
+```
+...
+private final JwtService jwtService;
+private final UserService userService;
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    ...
+    //Check user authentication status.
+    if ((username.isPresent() && password.isPresent()) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        Optional<User> user = this.userService.fetchUserByUsernameAndPassword(username.get(), password.get());
+
+        //Check user token.
+        if (user.isPresent() && this.jwtService.isTokenValid(token, user.get())) {
+
+            //Create authentication for current request.
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.get().getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            //Update security context.
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+    }
+    ...
+}
+```

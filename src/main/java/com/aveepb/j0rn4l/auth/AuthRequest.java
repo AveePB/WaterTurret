@@ -1,19 +1,16 @@
-package dev.security.diary.controller.request;
+package com.aveepb.j0rn4l.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class AuthRequest {
 
-    private String email;
-    private String nickname;
+    private String username;
     private String password;
-
 }

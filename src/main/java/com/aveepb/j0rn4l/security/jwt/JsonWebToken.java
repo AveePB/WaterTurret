@@ -1,4 +1,4 @@
-package dev.aveepb.diary.security.util;
+package com.aveepb.j0rn4l.security.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 
 public class JsonWebToken {
+
+    private static int TOKEN_LIFESPAN = 1000 * 60 * 60;
 
     /**
      * @param token the json web token.
@@ -50,13 +52,12 @@ public class JsonWebToken {
      * @return the new token.
      */
     public static String generateToken(HashMap<String, Object> extraClaims, Key key, UserDetails user) {
-        extraClaims.put("pass", user.getPassword());
 
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000*60))
+                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_LIFESPAN))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

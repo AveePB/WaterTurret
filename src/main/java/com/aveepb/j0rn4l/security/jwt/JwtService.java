@@ -1,7 +1,4 @@
-package dev.aveepb.diary.security.service;
-
-import dev.aveepb.diary.security.util.JsonWebToken;
-import dev.aveepb.diary.security.util.JsonWebTokenClaims;
+package com.aveepb.j0rn4l.security.jwt;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -15,7 +12,7 @@ import java.util.Optional;
 @Service
 public class JwtService {
 
-    private static final String SIGNING_KEY = "";
+    private static final String SIGNING_KEY = "wy1P/Cl+2sluXkjgtDQrJi2fkLYUicZnJf8WBQN66tKpUAUfK4ds9WLOml/9/phubyOeX5CEzL2Va1hOmunEB2Pp9q4ZnPe8mWrUXXItk3aQJUiMoaZkoqJEkE5orsSmVnadEj3AufaiYUx9v6sLvVLaWZsGy021ek4TlmanIr2Om7jP+mOW57GnOKMI+n3hk/h73C6ImkwPy0M1Nc85aV45leYTHPR1VTZYavLNicMnzLeHerwuxIxf5PHiw7uUadGQTsdy1PTF4WimwDvQp4vPcGJyykxqAXpfBnrO1ud4O2ghaP/aQlshwysV927nKyoERyjp2oNzg0XNNu0M9JZljAXvAC+dqDIt3BQmc20=";
 
     /**
      * @param token the json web token.
@@ -36,14 +33,6 @@ public class JwtService {
         return Optional.of(JsonWebTokenClaims.extractUsername(token, fetchSigningKey()));
     }
 
-    /**
-     * @param token the json web token.
-     * @return the user password.
-     */
-    public Optional<String> fetchUserPassword(String token) {
-
-        return Optional.of(JsonWebTokenClaims.extractPassword(token, fetchSigningKey()));
-    }
 
     /**
      * @return SIGNING_KEY in the form of Key object.

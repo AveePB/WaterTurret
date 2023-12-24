@@ -1,9 +1,7 @@
-package dev.aveepb.diary.security.config;
+package com.aveepb.j0rn4l.security.config;
 
-import dev.aveepb.diary.security.service.UserService;
-
+import com.aveepb.j0rn4l.security.user.UserService;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,14 +13,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @RequiredArgsConstructor
-public class AuthenticationConfig {
+public class AuthConfiguration {
 
     private final UserService userService;
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider dao = new DaoAuthenticationProvider();
-
         dao.setUserDetailsService(this.userService);
         dao.setPasswordEncoder(passwordEncoder());
 
@@ -31,11 +28,13 @@ public class AuthenticationConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+
         return config.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 }

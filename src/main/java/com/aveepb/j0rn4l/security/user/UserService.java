@@ -1,7 +1,4 @@
-package dev.aveepb.diary.security.service;
-
-import dev.aveepb.diary.security.db.model.User;
-import dev.aveepb.diary.security.db.repo.UserRepository;
+package com.aveepb.j0rn4l.security.user;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,12 +17,26 @@ public class UserService implements UserDetailsService {
 
     /**
      * @param username the username.
-     * @param password the user password.
-     * @return the user object.
+     * @return true if contains otherwise false.
      */
-    public Optional<User> fetchUserByUsernameAndPassword(String username, String password) {
+    public boolean contains(String username) {
 
-        return this.repository.findByUsernameAndPassword(username, password);
+        return repository.existsByUsername(username);
+    }
+
+    /**
+     * @param username the username.
+     * @param password the user password.
+     * @return the user details.
+     * @throws UsernameNotFoundException
+     */
+    public UserDetails loadUserByUsernameAndPassword(String username, String password) throws UsernameNotFoundException {
+        Optional<User> userOptional = this.repository.findByUsernameAndPassword(username, password);
+
+        if (userOptional.isEmpty())
+            throw new UsernameNotFoundException("User not found");
+
+        return userOptional.get();
     }
 
     @Override
@@ -33,7 +44,7 @@ public class UserService implements UserDetailsService {
         Optional<User> userOptional = this.repository.findByUsername(username);
 
         if (userOptional.isEmpty())
-            throw new UsernameNotFoundException("User not found!");
+            throw new UsernameNotFoundException("User not found!!");
 
         return userOptional.get();
     }

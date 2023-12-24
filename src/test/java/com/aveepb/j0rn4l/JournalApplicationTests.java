@@ -1,10 +1,10 @@
-package dev.aveepb.diary;
+package com.aveepb.j0rn4l;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DiaryApplicationTests {
+class JournalApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -1,4 +1,4 @@
-package dev.aveepb.diary.security.util;
+package com.aveepb.j0rn4l.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -17,17 +17,6 @@ public class JsonWebTokenClaims {
         Claims claims = extractAllClaims(token, key);
 
         return claims.getSubject();
-    }
-
-    /**
-     * @param token the json web token.
-     * @param key the signing key.
-     * @return the claim.
-     */
-    public static String extractPassword(String token, Key key) {
-        Claims claims = extractAllClaims(token, key);
-
-        return claims.get("pass", String.class);
     }
 
     /**

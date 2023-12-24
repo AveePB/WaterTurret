@@ -5,13 +5,16 @@ import dev.aveepb.diary.security.db.repo.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository repository;
 
@@ -25,4 +28,13 @@ public class UserService {
         return this.repository.findByUsernameAndPassword(username, password);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> userOptional = this.repository.findByUsername(username);
+
+        if (userOptional.isEmpty())
+            throw new UsernameNotFoundException("User not found!");
+
+        return userOptional.get();
+    }
 }

@@ -91,16 +91,15 @@ of JWT tokens. Here's a breakdown of its primary functionalities:
   
 ```
 public static String generateToken(HashMap<String, Object> extraClaims, Key key, UserDetails user) {
-    extraClaims.put("pass", user.getPassword());
 
     return Jwts.builder()
             .setClaims(extraClaims)
             .setSubject(user.getUsername())
             .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + 1000*60))
+            .setExpiration(new Date(System.currentTimeMillis() + TOKEN_LIFESPAN))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
-}   
+}
 ```
   
 ### **Token Validation and Verification:** <a name="token_control"></a>
@@ -125,10 +124,10 @@ public static String extractUsername(String token, Key key) {
 ```   
 
 ```
-private Claims extractAllClaims(String token) {
-   
+public static Claims extractAllClaims(String token, Key key) {
+
     return Jwts.parserBuilder()
-            .setSigningKey(getSigningKey())
+            .setSigningKey(key)
             .build()
             .parseClaimsJws(token)
             .getBody();
@@ -181,7 +180,6 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
         //Extract important data from raw request.
         String token = authHeader.substring(PREFIX.length());
         Optional<String> username = this.jwtService.fetchUsername(token);
-        Optional<String> password = this.jwtService.fetchUserPassword(token);
 
         ...             
     }
@@ -204,14 +202,14 @@ private final UserService userService;
 protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
     ...
     //Check user authentication status.
-    if ((username.isPresent() && password.isPresent()) && SecurityContextHolder.getContext().getAuthentication() == null) {
-        Optional<User> user = this.userService.fetchUserByUsernameAndPassword(username.get(), password.get());
+    if (username.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
+        UserDetails user = this.userService.loadUserByUsername(username.get());
 
         //Check user token.
-        if (user.isPresent() && this.jwtService.isTokenValid(token, user.get())) {
+        if (this.jwtService.isTokenValid(token, user)) {
 
             //Create authentication for current request.
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.get().getAuthorities());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             //Update security context.

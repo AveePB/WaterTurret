@@ -1,0 +1,3 @@
+﻿  main.cpp
+C:\Users\mike3\Desktop\movement-detection\test\main.cpp(14,12): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  test.vcxproj -> C:\Users\mike3\Desktop\movement-detection\x64\Debug\test.exe
